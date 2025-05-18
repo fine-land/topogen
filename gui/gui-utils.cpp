@@ -37,6 +37,74 @@
 namespace guiUtils
 {
 
+void saveTxt(const QString& filepath, Generator *gen, DragWidget *dw)
+{
+  QFile file(filepath);
+   if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(nullptr, "Error", "Cannot open file for writing.");
+        return;
+    }
+   QTextStream out(&file);
+   out << "#   auto output by topology generator\n";
+   out << "#   first line: node num, switch num, link num\n";
+   out << "#   second line: switch#\n";
+   out << "#   other line, links: sid, did, bw(Gbps), delay(ns), error_rate\n";
+	
+   size_t nodes = gen->GetNNodes();
+   size_t bridges = 0;
+   for(size_t ix = 0; ix < nodes; ix++){
+   	Node* n = gen->GetNode(ix);
+	if(n->GetNodeType() == "Bridge"){
+		bridges++;
+	}
+   }
+
+   std::vector<DragLines> drawlines = dw->GetDrawLines();
+   size_t links = dw->GetDrawLines().size();
+   
+   out << nodes << " " << bridges << " " << links << "\n";
+   std::map<std::string, size_t> name2id;
+	
+   size_t hid = 0;
+   size_t bid = nodes - bridges;
+   for(size_t iii = 0; iii < bridges; iii++) {
+   	out << bid++ << " ";
+   }
+   out << "\n";
+   bid = nodes - bridges;
+
+   for(size_t iii = 0; iii < nodes; iii++){
+   	Node* node = gen->GetNode(iii);
+	std::string t = node->GetNodeType();
+	if (t == "Pc"){
+		name2id[node->GetNodeName()] = hid++;
+	} else if(t == "Bridge"){
+		name2id[node->GetNodeName()] = bid++;
+	}
+   }
+
+   
+   for(size_t iii = 0; iii < links; iii++){
+   	DragLines dl = drawlines[iii];
+	auto first = dl.GetFirst();
+	auto second = dl.GetSecond();
+	//QString qs ( QString::number(name2id[first]).toStdString() + std::string(" ") + 
+	//		QString::number(name2id[second]).toStdString() + 
+	//		std::string(" ") + nh->GetDataRate() + std::string("Gbps ") 
+	//        + nh->GetNetworkHardwareDelay() + std::string("ns 0.000000\n"));
+	out << name2id[first];
+	out << " ";
+	out << name2id[second];
+	out << " ";
+	out << "100Gbps";
+	out << " ";
+	out << "1000ns ";
+	out << "0.000000\n";
+	//out << qs;
+   }
+   file.close();
+}
+
 void saveXml(QXmlStreamWriter *writer, Generator *gen, DragWidget *dw)
 {
   writer->setAutoFormatting(true);

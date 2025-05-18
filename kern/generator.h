@@ -240,6 +240,11 @@ class Generator
      */
     void GenerateCodePython(std::string fileName = "");
 
+    size_t GetNBridges() const;
+
+  private:
+    size_t m_nbridges;
+
   private:
     /**
      * \brief Simulation name.

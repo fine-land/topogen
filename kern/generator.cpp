@@ -143,6 +143,9 @@ void Generator::AddNode(const std::string &type)
   {
     equi = new Node(this->m_indiceNodeBridge, type, std::string("bridge_"), number);
     this->m_indiceNodeBridge += 1;
+
+    ////
+    this->m_nbridges++;
   } 
   else if(type == "Tap")
   {
@@ -194,6 +197,8 @@ void Generator::AddNode(const std::string &type, const size_t number)
   {
     equi = new Node(this->m_indiceNodeBridge, type, std::string("bridge_"), number);
     this->m_indiceNodeBridge += 1;
+
+    this->m_nbridges++;
   } 
   else if(type == "Tap")
   {
@@ -224,6 +229,9 @@ void Generator::RemoveNode(const std::string &name)
   {
     if(this->m_listNode.at(i)->GetNodeName() == name)
     {
+	if(this->m_listNode.at(i)->GetNodeType() == "Bridge"){
+		this->m_nbridges--;
+	}
       delete this->m_listNode[i];
       this->m_listNode.erase(this->m_listNode.begin() + i);
       break;
@@ -244,6 +252,9 @@ void Generator::RemoveNode(const size_t index)
     return;
   }
   
+  if(this->m_listNode.at(index)->GetNodeType() == "Bridge"){
+  	this->m_nbridges--;
+  }
   delete this->m_listNode[index];
   this->m_listNode.erase(this->m_listNode.begin() + index);
 }
@@ -264,6 +275,10 @@ size_t Generator::GetNNodes() const
   return this->m_listNode.size();
 }
 
+
+size_t Generator::GetNBridges() const {
+	return this->m_nbridges;
+}
 
 //
 // Part of Application.

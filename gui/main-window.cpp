@@ -57,22 +57,25 @@ MainWindow::MainWindow(const std::string &simulationName)
   /*
   QAction *menuOpen = menuFichier->addAction("Open");
   menuOpen->setDisabled(true);
-  
+
   QAction *menuNew = menuFichier->addAction("New");
   menuNew->setDisabled(true);
-  
+
   QAction *menuSave = menuFichier->addAction("Save");
   menuSave->setDisabled(true);
-  
+
   QAction *menuSaveAs = menuFichier->addAction("Save as");
   menuSaveAs->setDisabled(true);
   */
   QAction *menuSavePix = menuFichier->addAction("Save as picture");
   connect(menuSavePix, SIGNAL(triggered()), this, SLOT(SavePicture()));
-  
+
   QAction *menuXml = menuFichier->addAction("Save as XML");
   connect(menuXml, SIGNAL(triggered()), this, SLOT(SaveXml()));
-  
+
+  QAction *menuTxt = menuFichier->addAction("Save as TXT");
+  connect(menuTxt, SIGNAL(triggered()), this, SLOT(SaveTxt()));
+
   QAction *menuXmlLoad = menuFichier->addAction("Load XML file");
   connect(menuXmlLoad, SIGNAL(triggered()), this, SLOT(LoadXml()));
 
@@ -82,102 +85,121 @@ MainWindow::MainWindow(const std::string &simulationName)
   QMenu *menuEdit = menuBar()->addMenu("&Edit");
   QAction *actionConfig = menuEdit->addAction("Configuration");
   actionConfig->setDisabled(true);
-  //connect(actionConfig, SIGNAL(triggered()), this, SLOT(ConfigurationMenu())); 
+  // connect(actionConfig, SIGNAL(triggered()), this, SLOT(ConfigurationMenu()));
 
   QMenu *menuView = menuBar()->addMenu("&Generate");
   QAction *actionCpp = menuView->addAction("&C++");
-  connect(actionCpp, SIGNAL(triggered()), this, SLOT(GenerateCpp())); 
+  connect(actionCpp, SIGNAL(triggered()), this, SLOT(GenerateCpp()));
   QAction *actionPython = menuView->addAction("&Python");
   connect(actionPython, SIGNAL(triggered()), this, SLOT(GeneratePython()));
 
   QMenu *menuHelp = menuBar()->addMenu("&Help");
   QAction *menuOnlineHelp = menuHelp->addAction("Online Help");
   menuOnlineHelp->setDisabled(true);
-  //connect(menuOnlineHelp, SIGNAL(triggered()), this, SLOT(Help()));
+  // connect(menuOnlineHelp, SIGNAL(triggered()), this, SLOT(Help()));
   QAction *menuAbout = menuHelp->addAction("About");
-  connect(menuAbout, SIGNAL(triggered()), this, SLOT(About())); 
+  connect(menuAbout, SIGNAL(triggered()), this, SLOT(About()));
 
   menuAbout = menuAbout;
   menuHelp = menuHelp;
+
+  /*  *****************  ns3 simuation *******************  */
+  QMenu *menuSimuation = menuBar()->addMenu("&Simuation");
+  QAction *actionSelectTopoFile = menuSimuation->addAction("Select ns3 Topology file");
+  connect(actionSelectTopoFile, SIGNAL(triggered()), this, SLOT(SelectTopoFile()));
+  QAction *actionSelectFlowFile = menuSimuation->addAction("Select ns3 Flow file");
+  connect(actionSelectFlowFile, SIGNAL(triggered()), this, SLOT(SelectFlowFile()));
+
   //
   // toolbar for add equipements.
   //
   QToolBar *toolBarFichier = addToolBar("");
-  //PC
+  // PC
   QIcon pcIcon(":/Ico/Pc.png");
-  QString pcString("Terminal");  
+  QString pcString("Terminal");
   QAction *pcAction = toolBarFichier->addAction(pcIcon, pcString);
   connect(pcAction, SIGNAL(triggered()), this, SLOT(CreatePc()));
-  //Pc-group
+  // Pc-group
   QIcon pcgIcon(":/Ico/Pc-group.png");
-  QString pcgString("Terminal Group");  
+  QString pcgString("Terminal Group");
   QAction *pcgAction = toolBarFichier->addAction(pcgIcon, pcgString);
   connect(pcgAction, SIGNAL(triggered()), this, SLOT(CreatePcGroup()));
-  //PC-Emu
+  // PC-Emu
   QIcon emuIcon(":/Ico/Emu.png");
-  QString emuString("PC with emu");  
+  QString emuString("PC with emu");
   QAction *emuAction = toolBarFichier->addAction(emuIcon, emuString);
   connect(emuAction, SIGNAL(triggered()), this, SLOT(CreateEmu()));
-  //PC-Tap
+  // PC-Tap
   QIcon tapIcon(":/Ico/Tap.png");
-  QString tapString("PC with tap");  
+  QString tapString("PC with tap");
   QAction *tapAction = toolBarFichier->addAction(tapIcon, tapString);
   connect(tapAction, SIGNAL(triggered()), this, SLOT(CreateTap()));
-  //AP-Wifi
+  // AP-Wifi
   QIcon apIcon(":/Ico/Ap-Wifi.png");
-  QString apString("AP Wifi");  
+  QString apString("AP Wifi");
   QAction *apAction = toolBarFichier->addAction(apIcon, apString);
   connect(apAction, SIGNAL(triggered()), this, SLOT(CreateAp()));
-  //StationWifi
+  // StationWifi
   QIcon stasIcon(":/Ico/StationWifi.png");
-  QString stasString("Station Wifi");  
+  QString stasString("Station Wifi");
   QAction *stasAction = toolBarFichier->addAction(stasIcon, stasString);
   connect(stasAction, SIGNAL(triggered()), this, SLOT(CreateStation()));
-  //Hub
+  // Hub
   QIcon hubIcon(":/Ico/Hub.png");
-  QString hubString("Hub");  
+  QString hubString("Hub");
   QAction *hubAction = toolBarFichier->addAction(hubIcon, hubString);
   connect(hubAction, SIGNAL(triggered()), this, SLOT(CreateHub()));
-  //Switch
+  // Switch
   QIcon switchIcon(":/Ico/Switch.png");
-  QString switchString("Switch");  
+  QString switchString("Switch");
   QAction *switchAction = toolBarFichier->addAction(switchIcon, switchString);
   connect(switchAction, SIGNAL(triggered()), this, SLOT(CreateSwitch()));
-  //Router
+  // Router
   QIcon routerIcon(":/Ico/Router.png");
-  QString routerString("Router");  
+  QString routerString("Router");
   QAction *routerAction = toolBarFichier->addAction(routerIcon, routerString);
   connect(routerAction, SIGNAL(triggered()), this, SLOT(CreateRouter()));
-  //separator
+  // separator
   toolBarFichier->addSeparator();
   // Wired Link
   QIcon linkIcon(":/Ico/WiredLink.png");
-  QString linkString("Wired Link");  
+  QString linkString("Wired Link");
   QAction *linkAction = toolBarFichier->addAction(linkIcon, linkString);
   connect(linkAction, SIGNAL(triggered()), this, SLOT(CreateWiredLink()));
   // Station link
   QIcon stasLinkIcon(":/Ico/Link.png");
-  QString stasLinkString("Station Link");  
+  QString stasLinkString("Station Link");
   QAction *stasLinkAction = toolBarFichier->addAction(stasLinkIcon, stasLinkString);
   connect(stasLinkAction, SIGNAL(triggered()), this, SLOT(CreateWifiLink()));
-  //P2P link
+  // P2P link
   QIcon p2pLinkIcon(":/Ico/P2pLink.png");
-  QString p2pLinkString("P2P Link");  
+  QString p2pLinkString("P2P Link");
   QAction *p2pLinkAction = toolBarFichier->addAction(p2pLinkIcon, p2pLinkString);
   connect(p2pLinkAction, SIGNAL(triggered()), this, SLOT(CreateP2pLink()));
-  //separator
+  // separator
+  //
+  //  ns3 RUN
+  //
+  // toolBarFichier->addSeparator();
+  // QIcon appsLinkIcon("");
+  // QString appsLinkString("Application");
+  // QAction *appsLinkAction = toolBarFichier->addAction(appsLinkIcon, appsLinkString);
+  // connect(appsLinkAction, SIGNAL(triggered()), this, SLOT(CreateApplication()));
+  //
   toolBarFichier->addSeparator();
-  QIcon appsLinkIcon("");
-  QString appsLinkString("Application");  
-  QAction *appsLinkAction = toolBarFichier->addAction(appsLinkIcon, appsLinkString);
-  connect(appsLinkAction, SIGNAL(triggered()), this, SLOT(CreateApplication()));
-  //separator
+  QIcon runLinkIcon("");
+  QString runLinkString("Run");
+  QAction *runLinkAction = toolBarFichier->addAction(runLinkIcon, runLinkString);
+  connect(runLinkAction, SIGNAL(triggered()), this, SLOT(RunSimulation()));
+  //
+  //
+  // separator
   toolBarFichier->addSeparator();
-  //Delete button
+  // Delete button
   QIcon delIcon(":/Ico/Del.png");
   QString delString("Delete");
   this->m_delAction = toolBarFichier->addAction(delIcon, delString);
-  this->m_delAction->setDisabled (true);  
+  this->m_delAction->setDisabled(true);
   connect(this->m_delAction, SIGNAL(triggered()), this, SLOT(DeleteObject()));
 
   //
@@ -188,13 +210,12 @@ MainWindow::MainWindow(const std::string &simulationName)
 
   dragLayout->addWidget(this->m_dw);
 
-  QWidget *zoneCentral = new QWidget; 
+  QWidget *zoneCentral = new QWidget;
   zoneCentral->setLayout(dragLayout);
-
   this->setCentralWidget(zoneCentral);
 
   //
-  // 
+  //
   //
   this->m_dw->SetMainWindow(this);
 }
@@ -209,7 +230,7 @@ void MainWindow::SetGenerator(Generator *gen)
   this->m_gen = gen;
 }
 
-Generator* MainWindow::GetGenerator()
+Generator *MainWindow::GetGenerator()
 {
   return this->m_gen;
 }
@@ -217,29 +238,29 @@ Generator* MainWindow::GetGenerator()
 void MainWindow::CleanIface()
 {
   bool used = false;
-  for(size_t i = 0; i < this->m_listIface.size(); i++)
+  for (size_t i = 0; i < this->m_listIface.size(); i++)
   {
     used = false;
-    for(size_t j = 0; j < this->m_gen->GetNNetworkHardwares(); j++)
+    for (size_t j = 0; j < this->m_gen->GetNNetworkHardwares(); j++)
     {
-      if( (this->m_gen->GetNetworkHardware(j)->GetNetworkHardwareName()).find("tap_") == 0)
+      if ((this->m_gen->GetNetworkHardware(j)->GetNetworkHardwareName()).find("tap_") == 0)
       {
-        if( this->m_listIface.at(i) == static_cast<Tap*>(this->m_gen->GetNetworkHardware(j))->GetIfaceName())
+        if (this->m_listIface.at(i) == static_cast<Tap *>(this->m_gen->GetNetworkHardware(j))->GetIfaceName())
         {
           used = true;
           break;
         }
       }
-      if( (this->m_gen->GetNetworkHardware(j)->GetNetworkHardwareName()).find("emu_") == 0 ) 
+      if ((this->m_gen->GetNetworkHardware(j)->GetNetworkHardwareName()).find("emu_") == 0)
       {
-        if( this->m_listIface.at(i) == static_cast<Emu*>(this->m_gen->GetNetworkHardware(j))->GetIfaceName())
+        if (this->m_listIface.at(i) == static_cast<Emu *>(this->m_gen->GetNetworkHardware(j))->GetIfaceName())
         {
           used = true;
           break;
         }
       }
     }
-    if(!used)
+    if (!used)
     {
       this->m_listIface.erase(this->m_listIface.begin() + i);
     }
@@ -256,7 +277,7 @@ void MainWindow::CreatePcGroup()
 {
   bool ok;
   size_t number = 0;
-  QString text = QInputDialog::getText(this, "Terminal Group", tr("Enter the number of machines to create :"), QLineEdit::Normal,"", &ok);
+  QString text = QInputDialog::getText(this, "Terminal Group", tr("Enter the number of machines to create :"), QLineEdit::Normal, "", &ok);
   if (ok && !text.isEmpty())
   {
     number = text.toUInt();
@@ -266,13 +287,13 @@ void MainWindow::CreatePcGroup()
     return;
   }
 
-  if(number <= 0 )
+  if (number <= 0)
   {
     QMessageBox::about(this, "Error", "The pc number can't be negative ...");
     return;
   }
 
-  this->m_gen->AddNode("Pc-group",number);
+  this->m_gen->AddNode("Pc-group", number);
   this->m_dw->CreateObject("Pc-group", this->m_gen->GetNode(this->m_gen->GetNNodes() - 1)->GetNodeName());
 }
 
@@ -284,9 +305,9 @@ void MainWindow::CreateEmu()
   QString text = QInputDialog::getText(this, "Emu", tr("Enter the real host interface to use:"), QLineEdit::Normal, "eth0", &ok);
   if (ok && !text.isEmpty())
   {
-    for(size_t i = 0; i < this->m_listIface.size(); i++)
+    for (size_t i = 0; i < this->m_listIface.size(); i++)
     {
-      if( text.toStdString() == this->m_listIface.at(i))
+      if (text.toStdString() == this->m_listIface.at(i))
       {
         QMessageBox::about(this, "Error", "The specified interface is already used ...");
         return;
@@ -301,7 +322,7 @@ void MainWindow::CreateEmu()
 
   this->m_gen->AddNode("Emu");
   this->m_gen->AddNetworkHardware("Emu", this->m_gen->GetNode(this->m_gen->GetNNodes() - 1)->GetNodeName(), text.toStdString());
-  this->m_dw->CreateObject("Emu",this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
+  this->m_dw->CreateObject("Emu", this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
 }
 
 void MainWindow::CreateTap()
@@ -312,9 +333,9 @@ void MainWindow::CreateTap()
   QString text = QInputDialog::getText(this, "Tap", tr("Enter the new interface to use :"), QLineEdit::Normal, "tap0", &ok);
   if (ok && !text.isEmpty())
   {
-    for(size_t i = 0; i < this->m_listIface.size(); i++)
+    for (size_t i = 0; i < this->m_listIface.size(); i++)
     {
-      if( text.toStdString() == this->m_listIface.at(i))
+      if (text.toStdString() == this->m_listIface.at(i))
       {
         QMessageBox::about(this, "Error", "The specified interface is already used ...");
         return;
@@ -329,14 +350,14 @@ void MainWindow::CreateTap()
 
   this->m_gen->AddNode("Tap");
   this->m_gen->AddNetworkHardware("Tap", this->m_gen->GetNode(this->m_gen->GetNNodes() - 1)->GetNodeName(), text.toStdString());
-  this->m_dw->CreateObject("Tap",this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
+  this->m_dw->CreateObject("Tap", this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
 }
 
 void MainWindow::CreateAp()
-{  
+{
   this->m_gen->AddNode("Ap");
   this->m_gen->AddNetworkHardware("Ap", this->m_gen->GetNode(this->m_gen->GetNNodes() - 1)->GetNodeName());
-  this->m_dw->CreateObject("Ap", this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName() );
+  this->m_dw->CreateObject("Ap", this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
 }
 
 void MainWindow::CreateStation()
@@ -355,7 +376,7 @@ void MainWindow::CreateSwitch()
 {
   this->m_gen->AddNode("Bridge");
   this->m_gen->AddNetworkHardware("Bridge", this->m_gen->GetNode(this->m_gen->GetNNodes() - 1)->GetNodeName());
-  this->m_dw->CreateObject("Bridge",this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
+  this->m_dw->CreateObject("Bridge", this->m_gen->GetNetworkHardware(this->m_gen->GetNNetworkHardwares() - 1)->GetNetworkHardwareName());
 }
 
 void MainWindow::CreateRouter()
@@ -366,7 +387,7 @@ void MainWindow::CreateRouter()
 
 void MainWindow::CreateWiredLink()
 {
-  if(this->m_dw->GetTraceNetworkHardware())
+  if (this->m_dw->GetTraceNetworkHardware())
   {
     this->m_dw->SetTraceNetworkHardware(false);
     this->m_dw->ResetSelected();
@@ -378,7 +399,7 @@ void MainWindow::CreateWiredLink()
 
 void MainWindow::CreateWifiLink()
 {
-  if(this->m_dw->GetTraceNetworkHardware())
+  if (this->m_dw->GetTraceNetworkHardware())
   {
     this->m_dw->SetTraceNetworkHardware(false);
     this->m_dw->ResetSelected();
@@ -390,7 +411,7 @@ void MainWindow::CreateWifiLink()
 
 void MainWindow::CreateP2pLink()
 {
-  if(this->m_dw->GetTraceNetworkHardware())
+  if (this->m_dw->GetTraceNetworkHardware())
   {
     this->m_dw->SetTraceNetworkHardware(false);
     this->m_dw->ResetSelected();
@@ -402,7 +423,7 @@ void MainWindow::CreateP2pLink()
 
 void MainWindow::CreateApplication()
 {
-  if(!this->m_dw->m_appsPing && !this->m_dw->m_appsUdpEcho && !this->m_dw->m_appsTcp)
+  if (!this->m_dw->m_appsPing && !this->m_dw->m_appsUdpEcho && !this->m_dw->m_appsTcp)
   {
     this->m_appsDialog = new ApplicationDialog(this->m_dw);
     this->m_appsDialog->exec();
@@ -414,9 +435,9 @@ void MainWindow::ConnectNode(const std::string &linkName, const std::string &nod
   size_t linkNumber = -1;
 
   // search link
-  for(size_t i = 0; i < this->m_gen->GetNNetworkHardwares(); i++)
+  for (size_t i = 0; i < this->m_gen->GetNNetworkHardwares(); i++)
   {
-    if(linkName == this->m_gen->GetNetworkHardware(i)->GetNetworkHardwareName())
+    if (linkName == this->m_gen->GetNetworkHardware(i)->GetNetworkHardwareName())
     {
       linkNumber = i;
       break;
@@ -425,15 +446,15 @@ void MainWindow::ConnectNode(const std::string &linkName, const std::string &nod
 
   // get the params network connected equipements.
   size_t numberOfConnectedMachines = 0;
-  if(nodeName.find("Get") == 0)
+  if (nodeName.find("Get") == 0)
   {
     numberOfConnectedMachines += 1;
   }
   else
   {
-    for(size_t i = 0; i < this->m_gen->GetNNodes(); i++)
+    for (size_t i = 0; i < this->m_gen->GetNNodes(); i++)
     {
-      if(nodeName == this->m_gen->GetNode(i)->GetNodeName())
+      if (nodeName == this->m_gen->GetNode(i)->GetNodeName())
       {
         numberOfConnectedMachines += this->m_gen->GetNode(i)->GetMachinesNumber();
       }
@@ -442,11 +463,11 @@ void MainWindow::ConnectNode(const std::string &linkName, const std::string &nod
 
   // get the current (destination) network connected equipements.
   std::vector<std::string> nodes = this->m_gen->GetNetworkHardware(linkNumber)->GetInstalledNodes();
-  for(size_t i = 0; i < nodes.size(); i++)
+  for (size_t i = 0; i < nodes.size(); i++)
   {
-    for(size_t j = 0; j < this->m_gen->GetNNodes(); j++)
+    for (size_t j = 0; j < this->m_gen->GetNNodes(); j++)
     {
-      if(nodes.at(i) == this->m_gen->GetNode(j)->GetNodeName())
+      if (nodes.at(i) == this->m_gen->GetNode(j)->GetNodeName())
       {
         numberOfConnectedMachines += this->m_gen->GetNode(j)->GetMachinesNumber();
       }
@@ -454,15 +475,15 @@ void MainWindow::ConnectNode(const std::string &linkName, const std::string &nod
   }
 
   // prevent overflow
-  if( numberOfConnectedMachines > (255 -2) )
+  if (numberOfConnectedMachines > (255 - 2))
   {
     QMessageBox::about(this, "Error", "Limit of machines exceeded.");
-    for(size_t i = 0; i < this->m_dw->GetDrawLines().size(); i++)
+    for (size_t i = 0; i < this->m_dw->GetDrawLines().size(); i++)
     {
-      if( (nodeName == this->m_dw->GetDrawLine(i).GetFirst() && 
-          this->m_gen->GetNetworkHardware(linkNumber)->GetNetworkHardwareName() == this->m_dw->GetDrawLine(i).GetSecond()) ||
-          (this->m_gen->GetNetworkHardware(linkNumber)->GetNetworkHardwareName() == this->m_dw->GetDrawLine(i).GetFirst() && 
-           nodeName == this->m_dw->GetDrawLine(i).GetSecond()) )
+      if ((nodeName == this->m_dw->GetDrawLine(i).GetFirst() &&
+           this->m_gen->GetNetworkHardware(linkNumber)->GetNetworkHardwareName() == this->m_dw->GetDrawLine(i).GetSecond()) ||
+          (this->m_gen->GetNetworkHardware(linkNumber)->GetNetworkHardwareName() == this->m_dw->GetDrawLine(i).GetFirst() &&
+           nodeName == this->m_dw->GetDrawLine(i).GetSecond()))
       {
         this->m_dw->EraseDrawLine(i);
         return;
@@ -483,25 +504,26 @@ void MainWindow::GenerateCpp()
   dlg.setFileMode(QFileDialog::AnyFile);
   dlg.setAcceptMode(QFileDialog::AcceptSave);
   dlg.setDefaultSuffix(".cc");
- 
-  if(dlg.exec())
+
+  if (dlg.exec())
   {
     fileName = dlg.selectedFiles().at(0);
 
     /* check if file exists and notificate the user */
-    if(QFile(fileName).exists())
+    if (QFile(fileName).exists())
     {
-      if(QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite ?", 
-            QMessageBox::Ok | QMessageBox::No).exec() != QMessageBox::Ok)
+      if (QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite ?",
+                      QMessageBox::Ok | QMessageBox::No)
+              .exec() != QMessageBox::Ok)
       {
         return;
       }
     }
   }
-  
+
   this->m_gen->GenerateCodeCpp(fileName.toStdString());
-  
-  if(fileName != "")
+
+  if (fileName != "")
   {
     QMessageBox(QMessageBox::Information, "Generated Cpp", "Code saved at " + fileName).exec();
   }
@@ -515,25 +537,26 @@ void MainWindow::GeneratePython()
   dlg.setFileMode(QFileDialog::AnyFile);
   dlg.setAcceptMode(QFileDialog::AcceptSave);
   dlg.setDefaultSuffix(".py");
- 
-  if(dlg.exec())
+
+  if (dlg.exec())
   {
     fileName = dlg.selectedFiles().at(0);
 
     /* check if file exists and notificate the user */
-    if(QFile(fileName).exists())
+    if (QFile(fileName).exists())
     {
-      if(QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
-            QMessageBox::Ok | QMessageBox::No).exec() != QMessageBox::Ok)
+      if (QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
+                      QMessageBox::Ok | QMessageBox::No)
+              .exec() != QMessageBox::Ok)
       {
         return;
       }
     }
   }
-  
+
   this->m_gen->GenerateCodePython(fileName.toStdString());
-  
-  if(fileName != "")
+
+  if (fileName != "")
   {
     QMessageBox(QMessageBox::Information, "Generated Python", "Code saved at " + fileName).exec();
   }
@@ -547,20 +570,19 @@ void MainWindow::DeleteObject()
 void MainWindow::About()
 {
   QMessageBox::about(this, "About",
-      tr("<p align=\"center\">"
-        "<h2>The ns-3 topology generator"
-        "</h2>"
-        "</p><br />"
-        "Copyright (c) 2009-2010 University of Strasbourg<br /><br />"
-        "This program is free software; you can redistribute it and/or<br />"
-        "modify it under the terms of the GNU General Public License<br />"
-        "as published by the Free Software Foundation; either version 2<br />"
-        "of the License, or (at your option) any later version.<br />"
-        "<br />"
-        "<strong>Authors:</strong><br />"
-        "Pierre Weiss &lt;3weissp@gmail.com&gt;<br />"
-        "Sebastien Vincent &lt;vincent@clarinet.u-strasbg.fr&gt;"
-        ));
+                     tr("<p align=\"center\">"
+                        "<h2>The ns-3 topology generator"
+                        "</h2>"
+                        "</p><br />"
+                        "Copyright (c) 2009-2010 University of Strasbourg<br /><br />"
+                        "This program is free software; you can redistribute it and/or<br />"
+                        "modify it under the terms of the GNU General Public License<br />"
+                        "as published by the Free Software Foundation; either version 2<br />"
+                        "of the License, or (at your option) any later version.<br />"
+                        "<br />"
+                        "<strong>Authors:</strong><br />"
+                        "Pierre Weiss &lt;3weissp@gmail.com&gt;<br />"
+                        "Sebastien Vincent &lt;vincent@clarinet.u-strasbg.fr&gt;"));
 }
 
 void MainWindow::SavePicture()
@@ -569,23 +591,24 @@ void MainWindow::SavePicture()
   dlg.setFileMode(QFileDialog::AnyFile);
   dlg.setAcceptMode(QFileDialog::AcceptSave);
   dlg.setDefaultSuffix(".png");
- 
-  if(dlg.exec())
+
+  if (dlg.exec())
   {
     QImage img = this->m_dw->grab().toImage();
     QString fileName = dlg.selectedFiles().at(0);
 
     /* check if file exists and notificate the user */
-    if(QFile(fileName).exists())
+    if (QFile(fileName).exists())
     {
-      if(QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
-            QMessageBox::Ok | QMessageBox::No).exec() != QMessageBox::Ok)
+      if (QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
+                      QMessageBox::Ok | QMessageBox::No)
+              .exec() != QMessageBox::Ok)
       {
         return;
       }
     }
 
-    if(img.save(fileName))
+    if (img.save(fileName))
     {
       QMessageBox(QMessageBox::Information, "Save picture", "Picture saved at " + fileName).exec();
     }
@@ -596,6 +619,42 @@ void MainWindow::SavePicture()
   }
 }
 
+void MainWindow::SaveTxt()
+{
+  QString fileName = "";
+  QFileDialog dlg(this, tr("Save TXT"));
+  dlg.setFileMode(QFileDialog::AnyFile);
+  dlg.setAcceptMode(QFileDialog::AcceptSave);
+  dlg.setDefaultSuffix(".txt");
+
+  if (dlg.exec())
+  {
+    fileName = dlg.selectedFiles().at(0);
+
+    /* check if file exists and notificate the user */
+    if (QFile(fileName).exists())
+    {
+      if (QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
+                      QMessageBox::Ok | QMessageBox::No)
+              .exec() != QMessageBox::Ok)
+      {
+        return;
+      }
+    }
+  }
+
+  // QString fileName = "test.txt";
+  QFile file(fileName);
+  file.open(QFile::WriteOnly | QFile::Text);
+  // QXmlStreamWriter *writer = new QXmlStreamWriter(&file);
+
+  guiUtils::saveTxt(file.fileName(), this->m_gen, this->m_dw);
+
+  file.close();
+
+  QMessageBox(QMessageBox::Information, "Save Simulation", "Simulation saved at " + fileName).exec();
+}
+
 void MainWindow::SaveXml()
 {
   QString fileName = "";
@@ -603,29 +662,30 @@ void MainWindow::SaveXml()
   dlg.setFileMode(QFileDialog::AnyFile);
   dlg.setAcceptMode(QFileDialog::AcceptSave);
   dlg.setDefaultSuffix(".xml");
- 
-  if(dlg.exec())
+
+  if (dlg.exec())
   {
     fileName = dlg.selectedFiles().at(0);
 
     /* check if file exists and notificate the user */
-    if(QFile(fileName).exists())
+    if (QFile(fileName).exists())
     {
-      if(QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
-            QMessageBox::Ok | QMessageBox::No).exec() != QMessageBox::Ok)
+      if (QMessageBox(QMessageBox::Question, "File exists", "File already exists. Overwrite?",
+                      QMessageBox::Ok | QMessageBox::No)
+              .exec() != QMessageBox::Ok)
       {
         return;
       }
     }
   }
 
-  //QString fileName = "test.xml";
+  // QString fileName = "test.xml";
   QFile file(fileName);
   file.open(QFile::WriteOnly | QFile::Text);
   QXmlStreamWriter *writer = new QXmlStreamWriter(&file);
-  
+
   guiUtils::saveXml(writer, this->m_gen, this->m_dw);
-  
+
   file.close();
 
   QMessageBox(QMessageBox::Information, "Save Simulation", "Simulation saved at " + fileName).exec();
@@ -637,11 +697,11 @@ void MainWindow::LoadXml()
   QFileDialog dlg(this, tr("Load XML"));
   dlg.setFileMode(QFileDialog::AnyFile);
 
-  if(dlg.exec())
+  if (dlg.exec())
   {
     fileName = dlg.selectedFiles().at(0);
 
-    if(!QFile(fileName).exists())
+    if (!QFile(fileName).exists())
     {
       QMessageBox(QMessageBox::Information, "File don't exists", "File don't exists.").exec();
       return;
@@ -651,11 +711,69 @@ void MainWindow::LoadXml()
   QFile file(fileName);
   file.open(QFile::ReadOnly | QFile::Text);
   QXmlStreamReader *reader = new QXmlStreamReader(&file);
-  
+
   guiUtils::loadXml(reader, this->m_gen, this->m_dw);
-  
+
   file.close();
 
   QMessageBox(QMessageBox::Information, "Load Simulation", "Simulation loaded.").exec();
 }
 
+void MainWindow::SelectTopoFile()
+{
+  QString fileName = QFileDialog::getOpenFileName(this, tr("选择拓扑文件"), ".", tr("拓扑文件 (*.txt)"));
+  if (!fileName.isEmpty())
+  {
+    m_topoFilepath = fileName;
+    qDebug() << "Selected Topo File:" << m_topoFilepath;
+  }
+}
+
+void MainWindow::SelectFlowFile()
+{
+  QString fileName = QFileDialog::getOpenFileName(this, tr("选择流文件"), ".", tr("流文件 (*.txt)"));
+  if (!fileName.isEmpty())
+  {
+    m_flowFilepath = fileName;
+    qDebug() << "Selected Flow File:" << m_flowFilepath;
+  }
+}
+
+// void MainWindow::RunSimulation(){}
+
+void MainWindow::RunSimulation()
+{
+  qDebug() << "Run 按钮被点击！";
+
+  // 示例命令：执行 python run.py --cc dcqcn --topo topoFile --trace flowFile
+  QStringList arguments;
+  QFileInfo topo(m_topoFilepath);
+  QFileInfo flow(m_flowFilepath);
+  arguments << "run.py"
+            << "--cc" << "dcqcn"
+            << "--bw" << "100"
+            << "--topo" << topo.fileName()
+            << "--trace" << flow.fileName();
+
+  QProcess *process = new QProcess(this);
+  process->setWorkingDirectory(QDir::currentPath());
+
+  qDebug() << "执行命令: python" << arguments.join(" ");
+
+  process->start("python", arguments);
+
+  if (!process->waitForStarted())
+  {
+    qDebug() << "启动 Python 脚本失败！";
+    return;
+  }
+
+  process->waitForFinished(); // 可选：等待执行完成
+  QByteArray output = process->readAllStandardOutput();
+  QByteArray error = process->readAllStandardError();
+
+  if (!output.isEmpty())
+    qDebug() << "输出：" << output;
+  if (!error.isEmpty())
+    qDebug() << "错误：" << error;
+}

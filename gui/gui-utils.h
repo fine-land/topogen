@@ -48,6 +48,9 @@ namespace guiUtils
  */
 void saveXml(QXmlStreamWriter *writer, Generator *gen, DragWidget *dw);
 
+
+void saveTxt(const QString& filepath, Generator *gen, DragWidget *dw);
+
 /**
  * \brief Load an xml file into the generator.
  * \param reader the xml reader
