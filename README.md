@@ -1,18 +1,21 @@
 The ns-3 topology generator
 ===========================
 
-The ns-3 topology generator project aims to provide a quick and easy way to create ns-3 topology.
-It provides intuitive GUI so you can add nodes, link, applications, ... and generates C++ simulation 
-code for ns-3.
+This application is modified from ns-3 topology generator;
+Your can visit [Topology_Generator-qt4](https://github.com/idaholab/Topology_Generator)
+ [Topology_Generator-qt5](https://github.com/shoeper/Topology_Generator)
+ to find more information.
 
-1) Build / install
-------------------
+# build 
 
 You need Qt 5 libraries to compile and use ns-3 topology generator.
 
+**Make sure to execute the build steps in the "simulation" directory of ns-3.**
 To build the project:
+ $ mkdir charts
  $ qmake
  $ make 
+
 
 To use it, simply run:
  $ ./ns-3-generator
@@ -24,12 +27,7 @@ The HTML generated documentation is located in doc/html/ directory of sources.
 
 Configurations may be saved to an XML file and later loaded.
 
-2) Example screenshot
-------------------
-![alt text](Ns-3-generator-test.png "Screenshot of Topology Generator")
-
-License
-------------------
+# License
 
   Copyright (c) 2009 University of Strasbourg
   
