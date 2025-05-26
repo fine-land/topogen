@@ -11,9 +11,13 @@ Your can visit [Topology_Generator-qt4](https://github.com/idaholab/Topology_Gen
 You need Qt 5 libraries to compile and use ns-3 topology generator.
 
 **Make sure to execute the build steps in the "simulation" directory of ns-3.**
+
 To build the project:
+
  $ mkdir charts
+
  $ qmake
+
  $ make 
 
 
