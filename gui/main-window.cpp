@@ -45,28 +45,30 @@
 
 #include "application-dialog.h"
 
+#include "flowconfigdialog.h"
+#include "show_figure.h"
+
 MainWindow::MainWindow(const std::string &simulationName)
 {
-  this->m_dw = NULL;
+  progressDialog = new QProgressDialog{"Running simulation...", "Cancel", 0, 0, this};
+  progressDialog->setWindowTitle("Simulation in Progress");
+  progressDialog->setWindowModality(Qt::WindowModal); // 模态对话框，阻止用户操作主窗口
+  progressDialog->setAutoClose(false);                // 手动控制关闭
+  progressDialog->setAutoReset(false);
+  // progressDialog->show(); // 显示进度对话框
+
+  this->m_dw = nullptr;
   this->m_gen = new Generator(simulationName);
 
   //
-  // Menu
+  // 主布局
+  //
+  QVBoxLayout *mainLayout = new QVBoxLayout;
+
+  //
+  // 菜单
   //
   QMenu *menuFichier = menuBar()->addMenu("&File");
-  /*
-  QAction *menuOpen = menuFichier->addAction("Open");
-  menuOpen->setDisabled(true);
-
-  QAction *menuNew = menuFichier->addAction("New");
-  menuNew->setDisabled(true);
-
-  QAction *menuSave = menuFichier->addAction("Save");
-  menuSave->setDisabled(true);
-
-  QAction *menuSaveAs = menuFichier->addAction("Save as");
-  menuSaveAs->setDisabled(true);
-  */
   QAction *menuSavePix = menuFichier->addAction("Save as picture");
   connect(menuSavePix, SIGNAL(triggered()), this, SLOT(SavePicture()));
 
@@ -82,10 +84,15 @@ MainWindow::MainWindow(const std::string &simulationName)
   QAction *actionQuit = menuFichier->addAction("Quit");
   connect(actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
 
-  QMenu *menuEdit = menuBar()->addMenu("&Edit");
-  QAction *actionConfig = menuEdit->addAction("Configuration");
-  actionConfig->setDisabled(true);
-  // connect(actionConfig, SIGNAL(triggered()), this, SLOT(ConfigurationMenu()));
+  QMenu *menuEdit = menuBar()->addMenu("&Show");
+  QAction *actionFctCDF = menuEdit->addAction("FCT CDF");
+  connect(actionFctCDF, &QAction::triggered, this, [=]()
+          {
+            FCTCDFConfigDialog *dialog = new FCTCDFConfigDialog(this);
+            dialog->exec(); });
+  QAction *actionFctSlowDown = menuEdit->addAction("FCT Slow Down");
+  connect(actionFctSlowDown, &QAction::triggered, this, &MainWindow::onFctSlowDownTriggered);
+  // actionConfig->setDisabled(true);
 
   QMenu *menuView = menuBar()->addMenu("&Generate");
   QAction *actionCpp = menuView->addAction("&C++");
@@ -96,106 +103,90 @@ MainWindow::MainWindow(const std::string &simulationName)
   QMenu *menuHelp = menuBar()->addMenu("&Help");
   QAction *menuOnlineHelp = menuHelp->addAction("Online Help");
   menuOnlineHelp->setDisabled(true);
-  // connect(menuOnlineHelp, SIGNAL(triggered()), this, SLOT(Help()));
   QAction *menuAbout = menuHelp->addAction("About");
   connect(menuAbout, SIGNAL(triggered()), this, SLOT(About()));
 
-  menuAbout = menuAbout;
-  menuHelp = menuHelp;
-
-  /*  *****************  ns3 simuation *******************  */
-  QMenu *menuSimuation = menuBar()->addMenu("&Simuation");
-  QAction *actionSelectTopoFile = menuSimuation->addAction("Select ns3 Topology file");
+  QMenu *menuSimulation = menuBar()->addMenu("&Simulation");
+  QAction *actionSelectTopoFile = menuSimulation->addAction("Select ns3 Topology file");
   connect(actionSelectTopoFile, SIGNAL(triggered()), this, SLOT(SelectTopoFile()));
-  QAction *actionSelectFlowFile = menuSimuation->addAction("Select ns3 Flow file");
+  QAction *actionSelectFlowFile = menuSimulation->addAction("Select ns3 Flow file");
   connect(actionSelectFlowFile, SIGNAL(triggered()), this, SLOT(SelectFlowFile()));
 
   //
-  // toolbar for add equipements.
+  // 第二行：工具栏
   //
   QToolBar *toolBarFichier = addToolBar("");
-  // PC
   QIcon pcIcon(":/Ico/Pc.png");
   QString pcString("Terminal");
   QAction *pcAction = toolBarFichier->addAction(pcIcon, pcString);
   connect(pcAction, SIGNAL(triggered()), this, SLOT(CreatePc()));
-  // Pc-group
+
   QIcon pcgIcon(":/Ico/Pc-group.png");
   QString pcgString("Terminal Group");
   QAction *pcgAction = toolBarFichier->addAction(pcgIcon, pcgString);
   connect(pcgAction, SIGNAL(triggered()), this, SLOT(CreatePcGroup()));
-  // PC-Emu
+
   QIcon emuIcon(":/Ico/Emu.png");
   QString emuString("PC with emu");
   QAction *emuAction = toolBarFichier->addAction(emuIcon, emuString);
   connect(emuAction, SIGNAL(triggered()), this, SLOT(CreateEmu()));
-  // PC-Tap
+
   QIcon tapIcon(":/Ico/Tap.png");
   QString tapString("PC with tap");
   QAction *tapAction = toolBarFichier->addAction(tapIcon, tapString);
   connect(tapAction, SIGNAL(triggered()), this, SLOT(CreateTap()));
-  // AP-Wifi
+
   QIcon apIcon(":/Ico/Ap-Wifi.png");
   QString apString("AP Wifi");
   QAction *apAction = toolBarFichier->addAction(apIcon, apString);
   connect(apAction, SIGNAL(triggered()), this, SLOT(CreateAp()));
-  // StationWifi
+
   QIcon stasIcon(":/Ico/StationWifi.png");
   QString stasString("Station Wifi");
   QAction *stasAction = toolBarFichier->addAction(stasIcon, stasString);
   connect(stasAction, SIGNAL(triggered()), this, SLOT(CreateStation()));
-  // Hub
+
   QIcon hubIcon(":/Ico/Hub.png");
   QString hubString("Hub");
   QAction *hubAction = toolBarFichier->addAction(hubIcon, hubString);
   connect(hubAction, SIGNAL(triggered()), this, SLOT(CreateHub()));
-  // Switch
+
   QIcon switchIcon(":/Ico/Switch.png");
   QString switchString("Switch");
   QAction *switchAction = toolBarFichier->addAction(switchIcon, switchString);
   connect(switchAction, SIGNAL(triggered()), this, SLOT(CreateSwitch()));
-  // Router
+
   QIcon routerIcon(":/Ico/Router.png");
   QString routerString("Router");
   QAction *routerAction = toolBarFichier->addAction(routerIcon, routerString);
   connect(routerAction, SIGNAL(triggered()), this, SLOT(CreateRouter()));
-  // separator
+
   toolBarFichier->addSeparator();
-  // Wired Link
+
   QIcon linkIcon(":/Ico/WiredLink.png");
   QString linkString("Wired Link");
   QAction *linkAction = toolBarFichier->addAction(linkIcon, linkString);
   connect(linkAction, SIGNAL(triggered()), this, SLOT(CreateWiredLink()));
-  // Station link
+
   QIcon stasLinkIcon(":/Ico/Link.png");
   QString stasLinkString("Station Link");
   QAction *stasLinkAction = toolBarFichier->addAction(stasLinkIcon, stasLinkString);
   connect(stasLinkAction, SIGNAL(triggered()), this, SLOT(CreateWifiLink()));
-  // P2P link
+
   QIcon p2pLinkIcon(":/Ico/P2pLink.png");
   QString p2pLinkString("P2P Link");
   QAction *p2pLinkAction = toolBarFichier->addAction(p2pLinkIcon, p2pLinkString);
   connect(p2pLinkAction, SIGNAL(triggered()), this, SLOT(CreateP2pLink()));
-  // separator
-  //
-  //  ns3 RUN
-  //
-  // toolBarFichier->addSeparator();
-  // QIcon appsLinkIcon("");
-  // QString appsLinkString("Application");
-  // QAction *appsLinkAction = toolBarFichier->addAction(appsLinkIcon, appsLinkString);
-  // connect(appsLinkAction, SIGNAL(triggered()), this, SLOT(CreateApplication()));
-  //
+
   toolBarFichier->addSeparator();
+
   QIcon runLinkIcon("");
   QString runLinkString("Run");
   QAction *runLinkAction = toolBarFichier->addAction(runLinkIcon, runLinkString);
   connect(runLinkAction, SIGNAL(triggered()), this, SLOT(RunSimulation()));
-  //
-  //
-  // separator
+
   toolBarFichier->addSeparator();
-  // Delete button
+
   QIcon delIcon(":/Ico/Del.png");
   QString delString("Delete");
   this->m_delAction = toolBarFichier->addAction(delIcon, delString);
@@ -203,21 +194,108 @@ MainWindow::MainWindow(const std::string &simulationName)
   connect(this->m_delAction, SIGNAL(triggered()), this, SLOT(DeleteObject()));
 
   //
-  // Creation of Drag N Drop Area.
+  // 工具栏下方：4 个输入框 + 完成按钮
+  //
+  QHBoxLayout *inputLayout = new QHBoxLayout;
+
+  this->m_topoFileEdit = new QLineEdit;
+  this->m_topoFileEdit->setPlaceholderText("Topology File Path");
+  inputLayout->addWidget(new QLabel("Topology File:"));
+  inputLayout->addWidget(this->m_topoFileEdit);
+
+  /*
+  this->m_flowFileEdit = new QLineEdit;
+  this->m_flowFileEdit->setPlaceholderText("Flow File Path");
+  inputLayout->addWidget(new QLabel("Flow File:"));
+  inputLayout->addWidget(this->m_flowFileEdit);
+*/
+
+  QPushButton *genFlowButton = new QPushButton("GenFlow");
+  this->m_flowFileLabel = new QLabel("No flow file");
+  connect(genFlowButton, &QPushButton::clicked, this, [=]()
+          {
+        QString trafficDir = QDir::currentPath() + "/../traffic_gen";
+        FlowConfigDialog dialog(trafficDir, m_flowFilepath, m_flowFileLabel, m_statusLabel, this);
+        dialog.exec(); });
+  inputLayout->addWidget(new QLabel("Flow:"));
+  inputLayout->addWidget(genFlowButton);
+  inputLayout->addWidget(this->m_flowFileLabel);
+
+  this->m_bandwidthEdit = new QLineEdit;
+  this->m_bandwidthEdit->setPlaceholderText("Bandwidth (e.g., 10Mbps)");
+  inputLayout->addWidget(new QLabel("Bandwidth:"));
+  inputLayout->addWidget(this->m_bandwidthEdit);
+
+  this->m_algorithmEdit = new QLineEdit;
+  this->m_algorithmEdit->setPlaceholderText("Algorithm Name");
+  inputLayout->addWidget(new QLabel("Algorithm:"));
+  inputLayout->addWidget(this->m_algorithmEdit);
+
+  QPushButton *submitButton = new QPushButton("Submit");
+  connect(submitButton, SIGNAL(clicked()), this, SLOT(SubmitParameters()));
+  inputLayout->addWidget(submitButton);
+
+  inputLayout->addStretch(); // 靠左对齐，填充空白
+  mainLayout->addLayout(inputLayout);
+
+  //
+  // 拖放区域
   //
   QHBoxLayout *dragLayout = new QHBoxLayout;
   this->m_dw = new DragWidget();
-
   dragLayout->addWidget(this->m_dw);
+  mainLayout->addLayout(dragLayout);
 
+  //
+  // 设置中心部件
+  //
   QWidget *zoneCentral = new QWidget;
-  zoneCentral->setLayout(dragLayout);
+  zoneCentral->setLayout(mainLayout);
   this->setCentralWidget(zoneCentral);
 
   //
-  //
+  // 链接拖放部件
   //
   this->m_dw->SetMainWindow(this);
+}
+
+void MainWindow::SubmitParameters()
+{
+  QString topoFile = m_topoFileEdit->text();
+  QFileInfo file{m_flowFilepath};
+  QString flowFile = file.fileName();
+  QString bandwidth = m_bandwidthEdit->text();
+  QString algorithm = m_algorithmEdit->text();
+
+  // do lots check
+
+  m_topoFilepath = topoFile;
+  m_flowFilepath = flowFile;
+  m_bandwidth = bandwidth;
+  m_algorithmName = algorithm;
+  if (topoFile.isEmpty())
+  {
+    m_topoFilepath = "tmp_topology.txt";
+    DefaultSaveTopology();
+  }
+  if (flowFile.isEmpty())
+  {
+    // m_flowFilepath = "tmp_traffic.txt";
+    m_flowFilepath = "tmp_traffic.txt";
+  }
+  if (bandwidth.isEmpty())
+  {
+    m_bandwidth = "100";
+  }
+  if (algorithm.isEmpty())
+  {
+    m_algorithmName = "dcqcn";
+  }
+
+  m_topoFileEdit->setText(m_topoFilepath);
+  // m_flowFileEdit->setText(m_flowFilepath);
+  m_bandwidthEdit->setText(m_bandwidth);
+  m_algorithmEdit->setText(m_algorithmName);
 }
 
 MainWindow::~MainWindow()
@@ -750,30 +828,172 @@ void MainWindow::RunSimulation()
   QFileInfo topo(m_topoFilepath);
   QFileInfo flow(m_flowFilepath);
   arguments << "run.py"
-            << "--cc" << "dcqcn"
-            << "--bw" << "100"
-            << "--topo" << topo.fileName()
-            << "--trace" << flow.fileName();
+            << "--cc" << m_algorithmName
+            << "--topo" << topo.completeBaseName()
+            << "--trace" << flow.completeBaseName()
+            << "--bw" << m_bandwidth;
 
   QProcess *process = new QProcess(this);
   process->setWorkingDirectory(QDir::currentPath());
 
   qDebug() << "执行命令: python" << arguments.join(" ");
 
+  // process->start("python", arguments);
+
+  // 创建进度对话框 int x{new int{}};
+  // QProgressDialog *progressDialog = new QProgressDialog{"Running simulation...", "Cancel", 0, 0, this};
+  // progressDialog->setWindowTitle("Simulation in Progress");
+  // progressDialog->setWindowModality(Qt::WindowModal); // 模态对话框，阻止用户操作主窗口
+  // progressDialog->setAutoClose(false);                // 手动控制关闭
+  // progressDialog->setAutoReset(false);
+  progressDialog->setLabelText("simulating...");
+  progressDialog->show(); // 显示进度对话框
+
+  // 状态标志：区分用户取消和程序关闭
+  bool userCanceled = false;
+
+  // 连接取消按钮
+  connect(progressDialog, &QProgressDialog::canceled, this, [=]() mutable
+          {
+            userCanceled = true;
+            process->kill();
+            qDebug() << "Process canceled by user";
+            progressDialog->hide(); // 隐藏对话框
+          });
+
+  // 连接 QProcess 信号
+  connect(process, &QProcess::started, this, [=]()
+          {
+            qDebug() << "执行命令: python" << arguments.join(" ");
+            progressDialog->setLabelText("Python 脚本已启动..."); });
+
+  connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+          this, [=](int exitCode, QProcess::ExitStatus exitStatus)
+          {
+                    qDebug() << "Finished signal, exitCode:" << exitCode << ", exitStatus:" << exitStatus;
+
+                    // 隐藏对话框，防止触发 canceled 信号
+                    progressDialog->hide();
+
+                    QString message;
+                    if (exitStatus == QProcess::NormalExit && exitCode == 0 && !userCanceled) {
+                        message = "仿真成功完成！";
+                    }
+                    // 显示消息框
+                    QMessageBox::information(this, "仿真结果", message);
+                    // 清理
+                    process->deleteLater(); });
+
+  connect(process, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error)
+          {
+            qDebug() << "ErrorOccurred signal, error:" << process->errorString();
+
+            // 隐藏对话框
+            progressDialog->hide();
+
+            QMessageBox::critical(this, "错误", QString("无法启动仿真: %1")
+                                                  .arg(process->errorString()));
+
+            // 清理
+            process->deleteLater(); });
+
+  // 启动进程
   process->start("python", arguments);
 
   if (!process->waitForStarted())
   {
     qDebug() << "启动 Python 脚本失败！";
+    progressDialog->hide();
+    QMessageBox::critical(this, "错误", "无法启动 Python 脚本！");
+    process->deleteLater();
     return;
   }
+}
 
-  process->waitForFinished(); // 可选：等待执行完成
-  QByteArray output = process->readAllStandardOutput();
-  QByteArray error = process->readAllStandardError();
+void MainWindow::DefaultSaveTopology()
+{
+  // 创建临时文件 tmp_topology.txt
+  QString tempFilePath = QDir::currentPath() + "/mix/tmp_topology.txt";
+  QFile file(tempFilePath);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+    QMessageBox::warning(this, "Error", "Failed to create temporary topology file!");
+    return;
+  }
+  file.open(QFile::WriteOnly | QFile::Text);
+  // QXmlStreamWriter *writer = new QXmlStreamWriter(&file);
 
-  if (!output.isEmpty())
-    qDebug() << "输出：" << output;
-  if (!error.isEmpty())
-    qDebug() << "错误：" << error;
+  guiUtils::saveTxt(file.fileName(), this->m_gen, this->m_dw);
+
+  file.close();
+}
+
+void MainWindow::onFctSlowDownTriggered()
+{
+  FctSlowDownDialog dialog(this);
+  if (dialog.exec() == QDialog::Accepted)
+  {
+    QStringList ccs = dialog.getFilePaths();
+    QStringList algNames = dialog.getAlgNames();
+
+    if (ccs.isEmpty())
+    {
+      QMessageBox::warning(this, "错误", "请至少选择一个文件！");
+      return;
+    }
+    if (ccs.size() != algNames.size())
+    {
+      QMessageBox::warning(this, "错误", "文件数量与算法名称数量不匹配！");
+      return;
+    }
+    for (const QString &algName : algNames)
+    {
+      if (algName.isEmpty())
+      {
+        QMessageBox::warning(this, "错误", "所有算法名称不能为空！");
+        return;
+      }
+    }
+
+    runPythonFctPipeline("5", 0, 3000000000, 25, ccs, algNames, "./charts");
+  }
+}
+
+void MainWindow::runPythonFctPipeline(const QString &step, int type, int timeLimit, int bandwidth, const QStringList &ccs, const QStringList &algNames, const QString &outputDir)
+{
+  QProcess process;
+  QStringList arguments;
+
+  //  arguments << "-s" << step
+  //            << "-t" << QString::number(type)
+  //            << "-T" << QString::number(timeLimit)
+  //            << "-b" << QString::number(bandwidth)
+  //            << "--ccs" << ccs.join(",")
+  //            << "--alg-names" << algNames.join(",")
+  //            << "--output-dir" << outputDir;
+  //
+  arguments << "--ccs" << ccs.join(",")
+            << "--alg-names" << algNames.join(",")
+            << "--output-dir" << "./charts/";
+  qDebug() << "运行 Python FCT Slowdown Pipeline，参数：" << arguments.join(" ");
+  process.start("python3", QStringList() << "fct_slowdown_pipeline.py" << arguments); // 替换为实际 Python 脚本路径
+  process.waitForFinished(-1);
+
+  if (process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0)
+  {
+    qDebug() << "Python 脚本执行成功。";
+    qDebug() << "输出:" << process.readAllStandardOutput();
+
+    // 显示生成的图片
+    QStringList imagePaths = {
+        outputDir + "/avg_fct.png",
+        outputDir + "/95_fct.png",
+        outputDir + "/99_fct.png"};
+    ImageViewer viewer(imagePaths, this);
+    viewer.exec();
+  }
+  else
+  {
+    QMessageBox::critical(this, "错误", "执行 Python 脚本失败:\n" + process.errorString() + "\n" + process.readAllStandardError());
+  }
 }

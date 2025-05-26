@@ -218,6 +218,16 @@ private slots:
 
   void RunSimulation();
 
+  void SubmitParameters();
+
+  void onFctSlowDownTriggered();
+  // void ShowFCT();
+
+private:
+  void DefaultSaveTopology();
+
+  void runPythonFctPipeline(const QString &step, int type, int timeLimit, int bandwidth, const QStringList &ccs, const QStringList &algNames, const QString &outputDir);
+
 private:
   QString m_topoFilepath;
   QString m_flowFilepath;
@@ -226,9 +236,12 @@ private:
   QString m_bandwidth;
 
   QLineEdit *m_topoFileEdit;
-  QLineEdit *m_flowFileEdit;
+  QLabel *m_flowFileLabel;
   QLineEdit *m_bandwidthEdit;
   QLineEdit *m_algorithmEdit;
+
+  QLabel *m_statusLabel;
+  QProgressDialog *progressDialog;
 };
 
 #endif /* MAIN_WINDOW_H */

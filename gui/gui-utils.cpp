@@ -37,508 +37,523 @@
 namespace guiUtils
 {
 
-void saveTxt(const QString& filepath, Generator *gen, DragWidget *dw)
-{
-  QFile file(filepath);
-   if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::warning(nullptr, "Error", "Cannot open file for writing.");
-        return;
-    }
-   QTextStream out(&file);
-   out << "#   auto output by topology generator\n";
-   out << "#   first line: node num, switch num, link num\n";
-   out << "#   second line: switch#\n";
-   out << "#   other line, links: sid, did, bw(Gbps), delay(ns), error_rate\n";
-	
-   size_t nodes = gen->GetNNodes();
-   size_t bridges = 0;
-   for(size_t ix = 0; ix < nodes; ix++){
-   	Node* n = gen->GetNode(ix);
-	if(n->GetNodeType() == "Bridge"){
-		bridges++;
-	}
-   }
-
-   std::vector<DragLines> drawlines = dw->GetDrawLines();
-   size_t links = dw->GetDrawLines().size();
-   
-   out << nodes << " " << bridges << " " << links << "\n";
-   std::map<std::string, size_t> name2id;
-	
-   size_t hid = 0;
-   size_t bid = nodes - bridges;
-   for(size_t iii = 0; iii < bridges; iii++) {
-   	out << bid++ << " ";
-   }
-   out << "\n";
-   bid = nodes - bridges;
-
-   for(size_t iii = 0; iii < nodes; iii++){
-   	Node* node = gen->GetNode(iii);
-	std::string t = node->GetNodeType();
-	if (t == "Pc"){
-		name2id[node->GetNodeName()] = hid++;
-	} else if(t == "Bridge"){
-		name2id[node->GetNodeName()] = bid++;
-	}
-   }
-
-   
-   for(size_t iii = 0; iii < links; iii++){
-   	DragLines dl = drawlines[iii];
-	auto first = dl.GetFirst();
-	auto second = dl.GetSecond();
-	//QString qs ( QString::number(name2id[first]).toStdString() + std::string(" ") + 
-	//		QString::number(name2id[second]).toStdString() + 
-	//		std::string(" ") + nh->GetDataRate() + std::string("Gbps ") 
-	//        + nh->GetNetworkHardwareDelay() + std::string("ns 0.000000\n"));
-	out << name2id[first];
-	out << " ";
-	out << name2id[second];
-	out << " ";
-	out << "100Gbps";
-	out << " ";
-	out << "1000ns ";
-	out << "0.000000\n";
-	//out << qs;
-   }
-   file.close();
-}
-
-void saveXml(QXmlStreamWriter *writer, Generator *gen, DragWidget *dw)
-{
-  writer->setAutoFormatting(true);
-  writer->writeStartDocument();
-
-  writer->writeStartElement("Gen");
-    
-  //
-  // Dump Node list
-  //
-  writer->writeStartElement("Nodes");//<Nodes>
-  for(size_t i = 0; i < gen->GetNNodes(); i++)
-  { 
-    for(size_t j = 0; j < (size_t)dw->children().size(); j++)
-    {
-      DragObject *child = dynamic_cast<DragObject*>(dw->children().at(j));
-      if(child)
-      {
-        if(child->GetName() == gen->GetNode(i)->GetNodeName() && child->GetName() != "" && child->GetName() != "deleted")
-        {
-          writer->writeStartElement("node");//<node>
-          writer->writeTextElement("type", QString((gen->GetNode(i)->GetNodeType()).c_str()));
-          writer->writeTextElement("nodeNbr", QString((utils::integerToString(gen->GetNode(i)->GetMachinesNumber())).c_str()));
-          writer->writeTextElement("name", QString((gen->GetNode(i)->GetNodeName()).c_str()));
-          writer->writeTextElement("nsc", QString((gen->GetNode(i)->GetNsc()).c_str()));
-          writer->writeTextElement("x", QString((utils::integerToString(child->pos().x())).c_str()));
-          writer->writeTextElement("y", QString((utils::integerToString(child->pos().y())).c_str())); 
-          writer->writeEndElement();//</node>
-        }
-      }
-    }
-  }
-  writer->writeEndElement();//<Nodes>
-
-  //
-  // Dump Link list
-  //
-  bool hidden = true;
-  writer->writeStartElement("NetworkHardwares");//<NetworkHardwares>
-  for(size_t i = 0; i < gen->GetNNetworkHardwares(); i++)
+  void saveTxt(const QString &filepath, Generator *gen, DragWidget *dw)
   {
-    hidden = true;
-    writer->writeStartElement("networkHardware");//<networkHardware>
-    // check if link is hidden or not.
-    for(size_t j = 0; j < (size_t)dw->children().size(); j++)
+    QFile file(filepath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-      DragObject *child = dynamic_cast<DragObject*>(dw->children().at(j));
-      if(child)
+      QMessageBox::warning(nullptr, "Error", "Cannot open file for writing.");
+      return;
+    }
+    QTextStream out(&file);
+    //  out << "#   auto output by topology generator\n";
+    //  out << "#   first line: node num, switch num, link num\n";
+    //  out << "#   second line: switch#\n";
+    //  out << "#   other line, links: sid, did, bw(Gbps), delay(ns), error_rate\n";
+
+    size_t nodes = gen->GetNNodes();
+    size_t bridges = 0;
+    for (size_t ix = 0; ix < nodes; ix++)
+    {
+      Node *n = gen->GetNode(ix);
+      if (n->GetNodeType() == "Bridge")
       {
-        if(child->GetName() == gen->GetNetworkHardware(i)->GetNetworkHardwareName())
+        bridges++;
+      }
+    }
+
+    std::vector<DragLines> drawlines = dw->GetDrawLines();
+    size_t links = dw->GetDrawLines().size();
+
+    out << nodes << " " << bridges << " " << links << "\n";
+    std::map<std::string, size_t> name2id;
+
+    size_t hid = 0;
+    size_t bid = nodes - bridges;
+    for (size_t iii = 0; iii < bridges; iii++)
+    {
+      out << bid++ << " ";
+    }
+    out << "\n";
+    bid = nodes - bridges;
+
+    for (size_t iii = 0; iii < nodes; iii++)
+    {
+      Node *node = gen->GetNode(iii);
+      std::string t = node->GetNodeType();
+      if (t == "Pc")
+      {
+        name2id[node->GetNodeName()] = hid++;
+      }
+      else if (t == "Bridge")
+      {
+        name2id[node->GetNodeName()] = bid++;
+      }
+    }
+
+    for (size_t iii = 0; iii < links; iii++)
+    {
+      DragLines dl = drawlines[iii];
+      auto first = dl.GetFirst();
+      auto second = dl.GetSecond();
+      // QString qs ( QString::number(name2id[first]).toStdString() + std::string(" ") +
+      //		QString::number(name2id[second]).toStdString() +
+      //		std::string(" ") + nh->GetDataRate() + std::string("Gbps ")
+      //         + nh->GetNetworkHardwareDelay() + std::string("ns 0.000000\n"));
+      out << name2id[first];
+      out << " ";
+      out << name2id[second];
+      out << " ";
+      out << "100Gbps";
+      out << " ";
+      out << "1000ns ";
+      out << "0.000000\n";
+      // out << qs;
+    }
+
+    out << "#   auto output by topology generator\n";
+    out << "#   first line: node num, switch num, link num\n";
+    out << "#   second line: switch#\n";
+    out << "#   other line, links: sid, did, bw(Gbps), delay(ns), error_rate\n";
+
+    file.close();
+  }
+
+  void saveXml(QXmlStreamWriter *writer, Generator *gen, DragWidget *dw)
+  {
+    writer->setAutoFormatting(true);
+    writer->writeStartDocument();
+
+    writer->writeStartElement("Gen");
+
+    //
+    // Dump Node list
+    //
+    writer->writeStartElement("Nodes"); //<Nodes>
+    for (size_t i = 0; i < gen->GetNNodes(); i++)
+    {
+      for (size_t j = 0; j < (size_t)dw->children().size(); j++)
+      {
+        DragObject *child = dynamic_cast<DragObject *>(dw->children().at(j));
+        if (child)
         {
-          hidden = false;
-          break;
+          if (child->GetName() == gen->GetNode(i)->GetNodeName() && child->GetName() != "" && child->GetName() != "deleted")
+          {
+            writer->writeStartElement("node"); //<node>
+            writer->writeTextElement("type", QString((gen->GetNode(i)->GetNodeType()).c_str()));
+            writer->writeTextElement("nodeNbr", QString((utils::integerToString(gen->GetNode(i)->GetMachinesNumber())).c_str()));
+            writer->writeTextElement("name", QString((gen->GetNode(i)->GetNodeName()).c_str()));
+            writer->writeTextElement("nsc", QString((gen->GetNode(i)->GetNsc()).c_str()));
+            writer->writeTextElement("x", QString((utils::integerToString(child->pos().x())).c_str()));
+            writer->writeTextElement("y", QString((utils::integerToString(child->pos().y())).c_str()));
+            writer->writeEndElement(); //</node>
+          }
         }
       }
     }
-    if(hidden)
+    writer->writeEndElement(); //<Nodes>
+
+    //
+    // Dump Link list
+    //
+    bool hidden = true;
+    writer->writeStartElement("NetworkHardwares"); //<NetworkHardwares>
+    for (size_t i = 0; i < gen->GetNNetworkHardwares(); i++)
     {
-      writer->writeTextElement("hidden", "true");
-    }
-    else
-    {
-      writer->writeTextElement("hidden", "false");
-    }
-    writer->writeTextElement("type", QString((gen->GetNetworkHardware(i)->GetLinkType()).c_str()));     
-    writer->writeTextElement("name", QString((gen->GetNetworkHardware(i)->GetNetworkHardwareName()).c_str()));     
-    writer->writeTextElement("dataRate", QString((gen->GetNetworkHardware(i)->GetDataRate()).c_str()));
-    writer->writeTextElement("linkDelay", QString((gen->GetNetworkHardware(i)->GetNetworkHardwareDelay()).c_str()));
-    if(gen->GetNetworkHardware(i)->GetTrace())
-    {
-      writer->writeTextElement("enableTrace", "true");
-    }
-    else
-    {
-      writer->writeTextElement("enableTrace", "false");
-    }
-    if(gen->GetNetworkHardware(i)->GetPromisc())
-    {
-      writer->writeTextElement("tracePromisc", "true");
-    }
-    else
-    {
-      writer->writeTextElement("tracePromisc", "false");
-    } 
-    // for each link, put his own spécial configs
-    if(gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("ap_") == 0)
-    {
-      Ap *ap = dynamic_cast<Ap*>(gen->GetNetworkHardware(i));
-      if(ap->GetMobility())
+      hidden = true;
+      writer->writeStartElement("networkHardware"); //<networkHardware>
+      // check if link is hidden or not.
+      for (size_t j = 0; j < (size_t)dw->children().size(); j++)
       {
-        writer->writeTextElement("mobility", "true");
-      }
-      else
-      {
-        writer->writeTextElement("mobility", "false");
-      }
-    }
-    else if(gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("emu_") == 0)
-    {
-      Emu *emu = dynamic_cast<Emu*>(gen->GetNetworkHardware(i));
-      writer->writeTextElement("iface", QString((emu->GetIfaceName()).c_str()));
-    }
-    else if(gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("tap_") == 0)
-    {
-      Tap *tap = dynamic_cast<Tap*>(gen->GetNetworkHardware(i));
-      writer->writeTextElement("iface", QString((tap->GetIfaceName()).c_str()));
-    }
-    else if(gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("hub_") == 0 && !hidden)
-    {
-      for(size_t j = 0; j < (size_t)dw->children().size(); j++)
-      {
-        DragObject *child = dynamic_cast<DragObject*>(dw->children().at(j));
-        if(child)
+        DragObject *child = dynamic_cast<DragObject *>(dw->children().at(j));
+        if (child)
         {
-          if(child->GetName() == gen->GetNetworkHardware(i)->GetNetworkHardwareName())
+          if (child->GetName() == gen->GetNetworkHardware(i)->GetNetworkHardwareName())
           {
-            writer->writeTextElement("hubPos", QString( ( utils::integerToString(child->pos().x()) + "-" + 
-                                                          utils::integerToString(child->pos().y())).c_str()));
+            hidden = false;
             break;
           }
         }
       }
-    }
-    else
-    {
-      writer->writeTextElement("none", "");
-    }
-
-    writer->writeStartElement("connectedNodes");  
-    for(size_t j = 0; j < gen->GetNetworkHardware(i)->GetInstalledNodes().size(); j++)
-    {
-      writer->writeTextElement("name", QString((gen->GetNetworkHardware(i)->GetInstalledNode(j)).c_str()));
-    }
-    writer->writeEndElement();//</networkHardwares>
-    writer->writeEndElement();//</networkHardware>
-  }
-  writer->writeEndElement();//</NetworkHardwares>
-    
-  //
-  // Dump Application List
-  //
-  //<Applications>
-  writer->writeStartElement("Applications");
-  for(size_t i = 0; i < gen->GetNApplications(); i++)
-  {
-    writer->writeStartElement("application");
-    
-    writer->writeTextElement("type", QString((gen->GetApplication(i)->GetApplicationType()).c_str()));
-    writer->writeTextElement("name", QString((gen->GetApplication(i)->GetAppName()).c_str()));
-    writer->writeTextElement("sender", QString((gen->GetApplication(i)->GetSenderNode()).c_str()));
-    writer->writeTextElement("receiver", QString((gen->GetApplication(i)->GetReceiverNode()).c_str()));
-    writer->writeTextElement("startTime", QString((gen->GetApplication(i)->GetStartTime()).c_str()));
-    writer->writeTextElement("endTime", QString((gen->GetApplication(i)->GetEndTime()).c_str()));
-
-    writer->writeStartElement("special");
-    if(gen->GetApplication(i)->GetAppName().find("tcp_") == 0)
-    {
-      TcpLargeTransfer *tcp = dynamic_cast<TcpLargeTransfer*>(gen->GetApplication(i));
-      writer->writeTextElement("port", QString(utils::integerToString(tcp->GetPort()).c_str()));
-    } 
-    else if(gen->GetApplication(i)->GetAppName().find("udpEcho_") == 0)
-    {
-      UdpEcho *udp = dynamic_cast<UdpEcho*>(gen->GetApplication(i));
-      writer->writeTextElement("port", QString(utils::integerToString(udp->GetPort()).c_str()));
-      writer->writeTextElement("packetSize", QString(utils::integerToString(udp->GetPacketSize()).c_str()));
-      writer->writeTextElement("maxPacketCount", QString(utils::integerToString(udp->GetMaxPacketCount()).c_str()));
-      writer->writeTextElement("packetIntervalTime", QString((udp->GetPacketIntervalTime()).c_str()));
-    }
-    writer->writeEndElement();//</special>
-    writer->writeEndElement();//</application>
-  }
-  writer->writeEndElement();//</Applications>
-  
-  //<Lines>
-  writer->writeStartElement("Lines");
-  for(size_t i = 0; i < dw->GetDrawLines().size(); i++)
-  {
-    writer->writeStartElement("line");
-    
-    writer->writeTextElement("first", QString((dw->GetDrawLine(i).GetFirst()).c_str()));
-    writer->writeTextElement("second", QString((dw->GetDrawLine(i).GetSecond()).c_str()));
-    writer->writeTextElement("linkType", QString((dw->GetDrawLine(i).GetNetworkHardwareType()).c_str()));
-
-    writer->writeEndElement();//</line>
-  }
-  writer->writeEndElement();//</Lines>
-
-  writer->writeEndDocument();//</Gen>
-}
-
-void loadXml(QXmlStreamReader *reader, Generator *gen, DragWidget *dw)
-{
-  reader->readNext();
-  while(!reader->atEnd())
-  {
-    if(reader->isStartElement()) 
-    {
-      if(reader->name() == "Nodes") 
+      if (hidden)
       {
-        guiUtils::jumpToNextStartElement(reader);
-        while(reader->name() == "node")
+        writer->writeTextElement("hidden", "true");
+      }
+      else
+      {
+        writer->writeTextElement("hidden", "false");
+      }
+      writer->writeTextElement("type", QString((gen->GetNetworkHardware(i)->GetLinkType()).c_str()));
+      writer->writeTextElement("name", QString((gen->GetNetworkHardware(i)->GetNetworkHardwareName()).c_str()));
+      writer->writeTextElement("dataRate", QString((gen->GetNetworkHardware(i)->GetDataRate()).c_str()));
+      writer->writeTextElement("linkDelay", QString((gen->GetNetworkHardware(i)->GetNetworkHardwareDelay()).c_str()));
+      if (gen->GetNetworkHardware(i)->GetTrace())
+      {
+        writer->writeTextElement("enableTrace", "true");
+      }
+      else
+      {
+        writer->writeTextElement("enableTrace", "false");
+      }
+      if (gen->GetNetworkHardware(i)->GetPromisc())
+      {
+        writer->writeTextElement("tracePromisc", "true");
+      }
+      else
+      {
+        writer->writeTextElement("tracePromisc", "false");
+      }
+      // for each link, put his own spécial configs
+      if (gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("ap_") == 0)
+      {
+        Ap *ap = dynamic_cast<Ap *>(gen->GetNetworkHardware(i));
+        if (ap->GetMobility())
         {
-          guiUtils::jumpToNextStartElement(reader);
-          std::string type = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          size_t nodeNbr = utils::stringToInteger(reader->readElementText().toStdString());
-
-          gen->AddNode(type, nodeNbr);
-          
-          guiUtils::jumpToNextStartElement(reader);
-          gen->GetNode(gen->GetNNodes() - 1)->SetNodeName( (reader->readElementText()).toStdString() );
-
-          guiUtils::jumpToNextStartElement(reader);
-          gen->GetNode(gen->GetNNodes() - 1)->SetNsc( (reader->readElementText()).toStdString() );
-          
-          guiUtils::jumpToNextStartElement(reader);
-          size_t x = utils::stringToInteger((reader->readElementText()).toStdString());
-
-          guiUtils::jumpToNextStartElement(reader);
-          size_t y = utils::stringToInteger((reader->readElementText()).toStdString());
-
-          dw->CreateObject(type, gen->GetNode(gen->GetNNodes() - 1)->GetNodeName(), x, y);
-
-          guiUtils::jumpToNextStartElement(reader);
+          writer->writeTextElement("mobility", "true");
+        }
+        else
+        {
+          writer->writeTextElement("mobility", "false");
         }
       }
-      if(reader->name() == "NetworkHardwares")
+      else if (gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("emu_") == 0)
       {
-        guiUtils::jumpToNextStartElement(reader);
-        while(reader->name() == "networkHardware")
+        Emu *emu = dynamic_cast<Emu *>(gen->GetNetworkHardware(i));
+        writer->writeTextElement("iface", QString((emu->GetIfaceName()).c_str()));
+      }
+      else if (gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("tap_") == 0)
+      {
+        Tap *tap = dynamic_cast<Tap *>(gen->GetNetworkHardware(i));
+        writer->writeTextElement("iface", QString((tap->GetIfaceName()).c_str()));
+      }
+      else if (gen->GetNetworkHardware(i)->GetNetworkHardwareName().find("hub_") == 0 && !hidden)
+      {
+        for (size_t j = 0; j < (size_t)dw->children().size(); j++)
         {
-          guiUtils::jumpToNextStartElement(reader);
-          std::string hiddenState = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string type = reader->readElementText().toStdString();
-        
-          guiUtils::jumpToNextStartElement(reader);
-          std::string name = reader->readElementText().toStdString();
-          
-          guiUtils::jumpToNextStartElement(reader);
-          std::string dataRate = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string linkDelay = reader->readElementText().toStdString();
-        
-          guiUtils::jumpToNextStartElement(reader);
-          std::string enableTrace = reader->readElementText().toStdString();
-          
-          guiUtils::jumpToNextStartElement(reader);
-          std::string tracePromisc = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string special = reader->readElementText().toStdString();
-          
-          std::vector<std::string> connectedNodes;
-          guiUtils::jumpToNextStartElement(reader);
-          if(reader->name() == "connectedNodes")
+          DragObject *child = dynamic_cast<DragObject *>(dw->children().at(j));
+          if (child)
           {
-            guiUtils::jumpToNextStartElement(reader);
-            while(reader->name() == "name")
+            if (child->GetName() == gen->GetNetworkHardware(i)->GetNetworkHardwareName())
             {
-              connectedNodes.push_back(reader->readElementText().toStdString());
-              guiUtils::jumpToNextStartElement(reader);
-            }
-          }
-          
-          if(type == "Hub" || type == "PointToPoint")
-          {
-            gen->AddNetworkHardware(type);
-          }
-          else if(type == "Bridge" || type == "Ap")
-          {
-            gen->AddNetworkHardware(type, name);
-          } 
-          else // Emu, Tap
-          {
-            gen->AddNetworkHardware(type, name, special);
-          }
-        
-          gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetNetworkHardwareName(name);
-          gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetDataRate(dataRate);
-          gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetNetworkHardwareDelay(linkDelay);
-        
-          if(enableTrace == "true")
-          {
-            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetTrace(true);
-          }
-          if(tracePromisc == "true")
-          {
-            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetPromisc(true);
-          }
-
-          for(size_t i = 0; i < connectedNodes.size(); i++)
-          {
-            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->Install(connectedNodes.at(i));
-          }
-        
-          if(hiddenState == "false" && type != "Emu" && type != "Tap" && type != "Ap" && type != "Bridge")
-          {
-            if(type == "Hub")
-            {
-              std::vector<std::string> vec;
-              utils::split(vec, special, '-');
-              dw->CreateObject(type, name, utils::stringToInteger(vec.at(0)), utils::stringToInteger(vec.at(1)));
-            }
-            else
-            {
-              dw->CreateObject(type, name);
+              writer->writeTextElement("hubPos", QString((utils::integerToString(child->pos().x()) + "-" +
+                                                          utils::integerToString(child->pos().y()))
+                                                             .c_str()));
+              break;
             }
           }
         }
       }
-      if(reader->name() == "Applications")
+      else
       {
-        guiUtils::jumpToNextStartElement(reader);
-        while(reader->name() == "application")
-        {
-          guiUtils::jumpToNextStartElement(reader);
-          std::string type = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string name = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string sender = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          std::string receiver = reader->readElementText().toStdString();
-
-          guiUtils::jumpToNextStartElement(reader);
-          size_t startTime = utils::stringToInteger(reader->readElementText().toStdString());
-          
-          guiUtils::jumpToNextStartElement(reader);
-          size_t endTime = utils::stringToInteger(reader->readElementText().toStdString());
-
-          guiUtils::jumpToNextStartElement(reader);
-          size_t port = 0;
-          size_t packetSize = 0;
-          size_t maxPacketCount = 0;
-          std::string packetIntervalTime = "";
-          if(reader->name() == "special")
-          {
-            guiUtils::jumpToNextStartElement(reader);
-            if(type == "TcpLargeTransfer")
-            {
-              port = utils::stringToInteger(reader->readElementText().toStdString());
-            }
-            else if(type == "UdpEcho")
-            {
-              port = utils::stringToInteger(reader->readElementText().toStdString());
-              
-              guiUtils::jumpToNextStartElement(reader);
-              packetSize = utils::stringToInteger(reader->readElementText().toStdString());
-
-              guiUtils::jumpToNextStartElement(reader);
-              maxPacketCount = utils::stringToInteger(reader->readElementText().toStdString());
-              
-              guiUtils::jumpToNextStartElement(reader);
-              packetIntervalTime = reader->readElementText().toStdString();
-            }
-          }
-  
-          if(type == "Ping")
-          {
-            gen->AddApplication(type, sender, receiver, startTime, endTime);
-          }
-          else if(type == "UdpEcho")
-          {
-            gen->AddApplication(type, sender, receiver, startTime, endTime, port);
-            UdpEcho *udp = dynamic_cast<UdpEcho*>(gen->GetApplication(gen->GetNApplications() - 1));
-            udp->SetPacketSize(packetSize);
-            udp->SetMaxPacketCount(maxPacketCount);
-            udp->SetPacketIntervalTime(packetIntervalTime);
-          }
-          else if(type == "TcpLargeTransfer")
-          {
-            gen->AddApplication(type, sender, receiver, startTime, endTime, port);
-          }
-
-
-          if(type != "Ping")
-          {
-            guiUtils::jumpToNextStartElement(reader);
-          }
-        }
+        writer->writeTextElement("none", "");
       }
-      if(reader->name() == "Lines")
+
+      writer->writeStartElement("connectedNodes");
+      for (size_t j = 0; j < gen->GetNetworkHardware(i)->GetInstalledNodes().size(); j++)
       {
-        guiUtils::jumpToNextStartElement(reader);
-        while(reader->name() == "line")
-        {
-          DragLines dg;
-
-          guiUtils::jumpToNextStartElement(reader);
-          dg.SetFirst(reader->readElementText().toStdString());
-
-          guiUtils::jumpToNextStartElement(reader);
-          dg.SetSecond(reader->readElementText().toStdString());
-
-          guiUtils::jumpToNextStartElement(reader);
-          dg.SetNetworkHardwareType(reader->readElementText().toStdString());
-
-          dw->AddDrawLine(dg);
-
-          guiUtils::jumpToNextStartElement(reader);
-        }
+        writer->writeTextElement("name", QString((gen->GetNetworkHardware(i)->GetInstalledNode(j)).c_str()));
       }
+      writer->writeEndElement(); //</networkHardwares>
+      writer->writeEndElement(); //</networkHardware>
     }
-    reader->readNext();
-  }
-}
+    writer->writeEndElement(); //</NetworkHardwares>
 
-void jumpToNextStartElement(QXmlStreamReader *reader)
-{
-  reader->readNext();
-  while(!reader->isStartElement() && !reader->atEnd())
+    //
+    // Dump Application List
+    //
+    //<Applications>
+    writer->writeStartElement("Applications");
+    for (size_t i = 0; i < gen->GetNApplications(); i++)
+    {
+      writer->writeStartElement("application");
+
+      writer->writeTextElement("type", QString((gen->GetApplication(i)->GetApplicationType()).c_str()));
+      writer->writeTextElement("name", QString((gen->GetApplication(i)->GetAppName()).c_str()));
+      writer->writeTextElement("sender", QString((gen->GetApplication(i)->GetSenderNode()).c_str()));
+      writer->writeTextElement("receiver", QString((gen->GetApplication(i)->GetReceiverNode()).c_str()));
+      writer->writeTextElement("startTime", QString((gen->GetApplication(i)->GetStartTime()).c_str()));
+      writer->writeTextElement("endTime", QString((gen->GetApplication(i)->GetEndTime()).c_str()));
+
+      writer->writeStartElement("special");
+      if (gen->GetApplication(i)->GetAppName().find("tcp_") == 0)
+      {
+        TcpLargeTransfer *tcp = dynamic_cast<TcpLargeTransfer *>(gen->GetApplication(i));
+        writer->writeTextElement("port", QString(utils::integerToString(tcp->GetPort()).c_str()));
+      }
+      else if (gen->GetApplication(i)->GetAppName().find("udpEcho_") == 0)
+      {
+        UdpEcho *udp = dynamic_cast<UdpEcho *>(gen->GetApplication(i));
+        writer->writeTextElement("port", QString(utils::integerToString(udp->GetPort()).c_str()));
+        writer->writeTextElement("packetSize", QString(utils::integerToString(udp->GetPacketSize()).c_str()));
+        writer->writeTextElement("maxPacketCount", QString(utils::integerToString(udp->GetMaxPacketCount()).c_str()));
+        writer->writeTextElement("packetIntervalTime", QString((udp->GetPacketIntervalTime()).c_str()));
+      }
+      writer->writeEndElement(); //</special>
+      writer->writeEndElement(); //</application>
+    }
+    writer->writeEndElement(); //</Applications>
+
+    //<Lines>
+    writer->writeStartElement("Lines");
+    for (size_t i = 0; i < dw->GetDrawLines().size(); i++)
+    {
+      writer->writeStartElement("line");
+
+      writer->writeTextElement("first", QString((dw->GetDrawLine(i).GetFirst()).c_str()));
+      writer->writeTextElement("second", QString((dw->GetDrawLine(i).GetSecond()).c_str()));
+      writer->writeTextElement("linkType", QString((dw->GetDrawLine(i).GetNetworkHardwareType()).c_str()));
+
+      writer->writeEndElement(); //</line>
+    }
+    writer->writeEndElement(); //</Lines>
+
+    writer->writeEndDocument(); //</Gen>
+  }
+
+  void loadXml(QXmlStreamReader *reader, Generator *gen, DragWidget *dw)
   {
     reader->readNext();
-  }
-}
+    while (!reader->atEnd())
+    {
+      if (reader->isStartElement())
+      {
+        if (reader->name() == "Nodes")
+        {
+          guiUtils::jumpToNextStartElement(reader);
+          while (reader->name() == "node")
+          {
+            guiUtils::jumpToNextStartElement(reader);
+            std::string type = reader->readElementText().toStdString();
 
-bool isNetworkHardware(const std::string &equipement)
-{
-  bool res = false;
-  if( equipement.find("wifi_") == 0 || 
-      equipement.find("hub_") == 0  || 
-      equipement.find("bridge_") == 0 || 
-      equipement.find("emu_") == 0 ||  
-      equipement.find("tap_") == 0 ){
-    res = true;
+            guiUtils::jumpToNextStartElement(reader);
+            size_t nodeNbr = utils::stringToInteger(reader->readElementText().toStdString());
+
+            gen->AddNode(type, nodeNbr);
+
+            guiUtils::jumpToNextStartElement(reader);
+            gen->GetNode(gen->GetNNodes() - 1)->SetNodeName((reader->readElementText()).toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            gen->GetNode(gen->GetNNodes() - 1)->SetNsc((reader->readElementText()).toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            size_t x = utils::stringToInteger((reader->readElementText()).toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            size_t y = utils::stringToInteger((reader->readElementText()).toStdString());
+
+            dw->CreateObject(type, gen->GetNode(gen->GetNNodes() - 1)->GetNodeName(), x, y);
+
+            guiUtils::jumpToNextStartElement(reader);
+          }
+        }
+        if (reader->name() == "NetworkHardwares")
+        {
+          guiUtils::jumpToNextStartElement(reader);
+          while (reader->name() == "networkHardware")
+          {
+            guiUtils::jumpToNextStartElement(reader);
+            std::string hiddenState = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string type = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string name = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string dataRate = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string linkDelay = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string enableTrace = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string tracePromisc = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string special = reader->readElementText().toStdString();
+
+            std::vector<std::string> connectedNodes;
+            guiUtils::jumpToNextStartElement(reader);
+            if (reader->name() == "connectedNodes")
+            {
+              guiUtils::jumpToNextStartElement(reader);
+              while (reader->name() == "name")
+              {
+                connectedNodes.push_back(reader->readElementText().toStdString());
+                guiUtils::jumpToNextStartElement(reader);
+              }
+            }
+
+            if (type == "Hub" || type == "PointToPoint")
+            {
+              gen->AddNetworkHardware(type);
+            }
+            else if (type == "Bridge" || type == "Ap")
+            {
+              gen->AddNetworkHardware(type, name);
+            }
+            else // Emu, Tap
+            {
+              gen->AddNetworkHardware(type, name, special);
+            }
+
+            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetNetworkHardwareName(name);
+            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetDataRate(dataRate);
+            gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetNetworkHardwareDelay(linkDelay);
+
+            if (enableTrace == "true")
+            {
+              gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetTrace(true);
+            }
+            if (tracePromisc == "true")
+            {
+              gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->SetPromisc(true);
+            }
+
+            for (size_t i = 0; i < connectedNodes.size(); i++)
+            {
+              gen->GetNetworkHardware(gen->GetNNetworkHardwares() - 1)->Install(connectedNodes.at(i));
+            }
+
+            if (hiddenState == "false" && type != "Emu" && type != "Tap" && type != "Ap" && type != "Bridge")
+            {
+              if (type == "Hub")
+              {
+                std::vector<std::string> vec;
+                utils::split(vec, special, '-');
+                dw->CreateObject(type, name, utils::stringToInteger(vec.at(0)), utils::stringToInteger(vec.at(1)));
+              }
+              else
+              {
+                dw->CreateObject(type, name);
+              }
+            }
+          }
+        }
+        if (reader->name() == "Applications")
+        {
+          guiUtils::jumpToNextStartElement(reader);
+          while (reader->name() == "application")
+          {
+            guiUtils::jumpToNextStartElement(reader);
+            std::string type = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string name = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string sender = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            std::string receiver = reader->readElementText().toStdString();
+
+            guiUtils::jumpToNextStartElement(reader);
+            size_t startTime = utils::stringToInteger(reader->readElementText().toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            size_t endTime = utils::stringToInteger(reader->readElementText().toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            size_t port = 0;
+            size_t packetSize = 0;
+            size_t maxPacketCount = 0;
+            std::string packetIntervalTime = "";
+            if (reader->name() == "special")
+            {
+              guiUtils::jumpToNextStartElement(reader);
+              if (type == "TcpLargeTransfer")
+              {
+                port = utils::stringToInteger(reader->readElementText().toStdString());
+              }
+              else if (type == "UdpEcho")
+              {
+                port = utils::stringToInteger(reader->readElementText().toStdString());
+
+                guiUtils::jumpToNextStartElement(reader);
+                packetSize = utils::stringToInteger(reader->readElementText().toStdString());
+
+                guiUtils::jumpToNextStartElement(reader);
+                maxPacketCount = utils::stringToInteger(reader->readElementText().toStdString());
+
+                guiUtils::jumpToNextStartElement(reader);
+                packetIntervalTime = reader->readElementText().toStdString();
+              }
+            }
+
+            if (type == "Ping")
+            {
+              gen->AddApplication(type, sender, receiver, startTime, endTime);
+            }
+            else if (type == "UdpEcho")
+            {
+              gen->AddApplication(type, sender, receiver, startTime, endTime, port);
+              UdpEcho *udp = dynamic_cast<UdpEcho *>(gen->GetApplication(gen->GetNApplications() - 1));
+              udp->SetPacketSize(packetSize);
+              udp->SetMaxPacketCount(maxPacketCount);
+              udp->SetPacketIntervalTime(packetIntervalTime);
+            }
+            else if (type == "TcpLargeTransfer")
+            {
+              gen->AddApplication(type, sender, receiver, startTime, endTime, port);
+            }
+
+            if (type != "Ping")
+            {
+              guiUtils::jumpToNextStartElement(reader);
+            }
+          }
+        }
+        if (reader->name() == "Lines")
+        {
+          guiUtils::jumpToNextStartElement(reader);
+          while (reader->name() == "line")
+          {
+            DragLines dg;
+
+            guiUtils::jumpToNextStartElement(reader);
+            dg.SetFirst(reader->readElementText().toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            dg.SetSecond(reader->readElementText().toStdString());
+
+            guiUtils::jumpToNextStartElement(reader);
+            dg.SetNetworkHardwareType(reader->readElementText().toStdString());
+
+            dw->AddDrawLine(dg);
+
+            guiUtils::jumpToNextStartElement(reader);
+          }
+        }
+      }
+      reader->readNext();
+    }
   }
-  return res;
-}
+
+  void jumpToNextStartElement(QXmlStreamReader *reader)
+  {
+    reader->readNext();
+    while (!reader->isStartElement() && !reader->atEnd())
+    {
+      reader->readNext();
+    }
+  }
+
+  bool isNetworkHardware(const std::string &equipement)
+  {
+    bool res = false;
+    if (equipement.find("wifi_") == 0 ||
+        equipement.find("hub_") == 0 ||
+        equipement.find("bridge_") == 0 ||
+        equipement.find("emu_") == 0 ||
+        equipement.find("tap_") == 0)
+    {
+      res = true;
+    }
+    return res;
+  }
 
 } /* namespace guiUtils */
