@@ -57,3 +57,36 @@ class ImageViewer : public QDialog
 public:
     explicit ImageViewer(const QStringList &imagePaths, QWidget *parent = nullptr);
 };
+
+
+////////////////    THOUGHT_PUT    //////////////////////////
+//class Thoughtput
+//{
+//  Q_OBJECT
+//	public:
+//};
+
+
+
+class Thoughtput : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit Thoughtput(QWidget *parent = nullptr);
+    ~Thoughtput() = default;
+
+private slots:
+    void onFileSelectClicked();
+    void generateChart(); // 假设需要生成图表
+
+private:
+    QString selectedFilePath;
+
+    // UI components
+    QLineEdit *filePathEdit; // 显示选择的文件路径
+    QLabel *previewLabel; // 必须在这里声明 previewLabel 成员变量
+    QLineEdit *startTimeEdit;
+    QLineEdit *endTimeEdit;
+};
+

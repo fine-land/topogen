@@ -93,6 +93,10 @@ MainWindow::MainWindow(const std::string &simulationName)
   QAction *actionFctSlowDown = menuEdit->addAction("FCT Slow Down");
   connect(actionFctSlowDown, &QAction::triggered, this, &MainWindow::onFctSlowDownTriggered);
   // actionConfig->setDisabled(true);
+  
+  QAction *actionThoughtPut = menuEdit->addAction("ThoutghtPut");
+  connect(actionThoughtPut, &QAction::triggered, this, &MainWindow::ThoughtPut);
+
 
   QMenu *menuView = menuBar()->addMenu("&Generate");
   QAction *actionCpp = menuView->addAction("&C++");
@@ -996,4 +1000,10 @@ void MainWindow::runPythonFctPipeline(const QString &step, int type, int timeLim
   {
     QMessageBox::critical(this, "错误", "执行 Python 脚本失败:\n" + process.errorString() + "\n" + process.readAllStandardError());
   }
+}
+
+
+void MainWindow::ThoughtPut() {
+	 Thoughtput *dialog = new Thoughtput(this);
+	 dialog->exec(); // 模态对话框方式打开	
 }

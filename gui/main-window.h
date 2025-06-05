@@ -222,6 +222,7 @@ private slots:
 
   void onFctSlowDownTriggered();
   // void ShowFCT();
+  void ThoughtPut();
 
 private:
   void DefaultSaveTopology();

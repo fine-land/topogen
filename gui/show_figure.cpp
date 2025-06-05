@@ -252,3 +252,108 @@ ImageViewer::ImageViewer(const QStringList &imagePaths, QWidget *parent) : QDial
     layout->addWidget(scrollArea);
     setMinimumSize(850, 650);
 }
+
+
+
+Thoughtput::Thoughtput(QWidget *parent) :
+    QDialog(parent),
+    selectedFilePath("")
+{
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    // 文件路径显示与选择按钮
+    filePathEdit = new QLineEdit(this);
+    QPushButton *selectFileButton = new QPushButton("选择流速文件", this);
+    layout->addWidget(new QLabel("流速文件:"));
+    layout->addWidget(filePathEdit);
+    layout->addWidget(selectFileButton);
+
+    startTimeEdit = new QLineEdit(this);
+    endTimeEdit = new QLineEdit(this);
+    startTimeEdit->setPlaceholderText("请输入开始时间 (ms)");
+    endTimeEdit->setPlaceholderText("请输入结束时间 (ms)");
+    layout->addWidget(new QLabel("监测时间范围 (ms):"));
+    layout->addWidget(startTimeEdit);
+    layout->addWidget(endTimeEdit);
+
+
+    // 连接按钮点击事件到槽函数
+    connect(selectFileButton, &QPushButton::clicked, this, &Thoughtput::onFileSelectClicked);
+
+    // 添加“生成图表”按钮
+    QPushButton *generateChartButton = new QPushButton("生成图表", this);
+    layout->addWidget(generateChartButton);
+    connect(generateChartButton, &QPushButton::clicked, this, &Thoughtput::generateChart);
+}
+
+
+void Thoughtput::onFileSelectClicked()
+{
+    selectedFilePath = QFileDialog::getOpenFileName(this, tr("选择流速文件"), "", tr("Text Files (*.txt)"));
+    if (!selectedFilePath.isEmpty()) {
+        filePathEdit->setText(selectedFilePath);
+    }
+}
+
+void Thoughtput::generateChart()
+{
+    // 获取用户输入
+    QString filePath = filePathEdit->text();
+    QString startTimeStr = startTimeEdit->text();
+    QString endTimeStr = endTimeEdit->text();
+
+    // 验证输入
+    if (filePath.isEmpty()) {
+        QMessageBox::warning(this, "错误", "请先选择流速文件！");
+        return;
+    }
+    bool ok1, ok2;
+    double startTime = startTimeStr.toDouble(&ok1);
+    double endTime = endTimeStr.toDouble(&ok2);
+    if (!ok1 || !ok2 || startTime >= endTime) {
+        QMessageBox::warning(this, "错误", "请输入有效的开始和结束时间，且开始时间必须小于结束时间！");
+        return;
+    }
+    if (!QFile::exists(filePath)) {
+        QMessageBox::warning(this, "错误", "所选文件不存在！");
+        return;
+    }
+
+    // 调用Python脚本
+    QProcess process;
+    QString pythonScript = "./scripts/draw_rate.py"; // 假设脚本在当前工作目录
+    QStringList arguments;
+    arguments << pythonScript << filePath << "-d" << QString::number(startTime) << QString::number(endTime);
+
+    process.start("python3", arguments);
+    process.waitForFinished(-1); // 等待脚本执行完成
+
+    // 检查脚本执行结果并展示图片
+    QString outputPath = "./charts/flow_rate_plot.png";
+    if (process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0) {
+        if (QFile::exists(outputPath)) {
+            // 创建临时对话框显示图片
+            QDialog *imageDialog = new QDialog(this);
+            QVBoxLayout *layout = new QVBoxLayout(imageDialog);
+            QLabel *imageLabel = new QLabel(imageDialog);
+            QPixmap pixmap(outputPath);
+            if (!pixmap.isNull()) {
+                imageLabel->setPixmap(pixmap.scaled(600, 400, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                imageLabel->setAlignment(Qt::AlignCenter);
+                layout->addWidget(imageLabel);
+                imageDialog->setWindowTitle("流速变化图表");
+                imageDialog->resize(600, 400);
+                imageDialog->exec(); // 模态显示，关闭后自动销毁
+                QMessageBox::information(this, "成功", "图表已生成并保存到 ./charts/flow_rate_plot.png");
+            } else {
+                QMessageBox::warning(this, "错误", "无法加载生成的图片！");
+            }
+        } else {
+            QMessageBox::warning(this, "错误", "生成的图片文件不存在！");
+        }
+    } else {
+        QString error = process.readAllStandardError();
+        QMessageBox::critical(this, "错误", QString("生成图表失败：%1").arg(error));
+    }
+}
+
